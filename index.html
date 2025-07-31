@@ -12,6 +12,8 @@
     .entry { background: #fff; padding: 1rem; margin-top: 1rem; border-radius: 8px; }
     .complete { background: #d0ffd0; }
     .budget { margin-top: 2rem; font-size: 1.2rem; background: #fff; padding: 1rem; border-radius: 8px; }
+    .delete-btn { background-color: #ffcccc; color: #900; margin-top: 0.5rem; padding: 0.25rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
+    .password-box { margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -33,22 +35,38 @@
   <h2>申告一覧</h2>
   <div id="entries"></div>
 
+  <p>※アクセスできない人は直接<a href="https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID_HERE/edit" target="_blank">こちらのスプレッドシート</a>に記入してください。</p>
+
   <script>
     const form = document.getElementById("entry-form");
     const entries = document.getElementById("entries");
     const budgetSummary = document.getElementById("budget-summary");
     const TOTAL_BUDGET = 61500;
-    const requests = [];
+    let requests = [];
+    const actualInputPassword = "inuidondonsukininaru"; // パスワード指定
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("name").value;
       const planned = parseInt(document.getElementById("planned").value);
-      const id = Date.now();
-      const entry = { id, name, planned, actual: null, complete: false };
-      requests.push(entry);
-      render();
-      form.reset();
+      const used = calculateUsed();
+      if (used + planned > TOTAL_BUDGET) {
+        alert("残り予算を超えています。申請できません。");
+        return;
+      }
+
+      fetch("https://script.google.com/a/macros/gl.agh.aoyama.ed.jp/s/AKfycbwdCCpkBb4-SOdbUGgtQIwIe6Nkiz046xbAqQfGh3AOk2d-kiheDQGCv6oKSurHE7tS/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, planned })
+      }).then(() => {
+        alert("送信完了！");
+        const id = Date.now();
+        const entry = { id, name, planned, actual: null, complete: false };
+        requests.push(entry);
+        render();
+        form.reset();
+      }).catch(() => alert("送信に失敗しました"));
     });
 
     function calculateUsed() {
@@ -59,7 +77,7 @@
 
     function render() {
       entries.innerHTML = "";
-      requests.forEach((r) => {
+      requests.forEach((r, index) => {
         const div = document.createElement("div");
         div.className = "entry" + (r.complete ? " complete" : "");
         div.innerHTML = `
@@ -67,7 +85,11 @@
           予定: ${r.planned} 円<br>
           実績: ${r.actual != null ? r.actual + " 円" : "未入力"}<br>
           ${!r.complete ? `<label>使用金額:
-            <input type='number' id='actual-${r.id}' /><button onclick='submitActual(${r.id})'>確定</button></label>` : "完了☑️"}
+            <input type='number' id='actual-${r.id}' class='actual-input' /><br>
+            <input type='password' id='pw-${r.id}' class='password-box' placeholder='パスワード'/><br>
+            <button onclick='submitActual(${r.id})'>確定</button>
+            <button class='delete-btn' onclick='deleteEntry(${index})'>取消</button>
+          </label>` : "完了☑️"}
         `;
         entries.appendChild(div);
       });
@@ -83,7 +105,13 @@
     window.submitActual = (id) => {
       const target = requests.find(r => r.id === id);
       const input = document.getElementById(`actual-${id}`);
+      const pw = document.getElementById(`pw-${id}`).value;
       const actual = parseInt(input.value);
+
+      if (pw !== actualInputPassword) {
+        alert("パスワードが間違っています。");
+        return;
+      }
       if (actual > target.planned) {
         alert("予定金額を超えています。登録できません。");
         return;
@@ -91,6 +119,13 @@
       target.actual = actual;
       target.complete = true;
       render();
+    };
+
+    window.deleteEntry = (index) => {
+      if (confirm("本当にこの申請を取り消しますか？")) {
+        requests.splice(index, 1);
+        render();
+      }
     };
   </script>
 </body>
