@@ -35,7 +35,7 @@
   <h2>申告一覧</h2>
   <div id="entries"></div>
 
-  <p>※アクセスできない人は直接<a href="https://docs.google.com/spreadsheets/d/1_DU8ZmPdvsUHufNW1pt-mxAWEq5NLZtBPwYXTqYttJw/edit?gid=0#gid=0/edit" target="_blank">こちらのスプレッドシート</a>に記入してください。</p>
+  <p>※アクセスできない人は直接<a href="https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID_HERE/edit" target="_blank">こちらのスプレッドシート</a>に記入してください。</p>
 
   <script>
     const form = document.getElementById("entry-form");
@@ -55,7 +55,7 @@
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycbxR0jlhBHiEPeR3xfrnbrIxLdSoxoUpO57CLZ66pq_LaBfOdhVF4woEGFbF4kn2izUH/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbztHfVLyPGQmRKbJZ_YxOvNg8YUvlPdhVjZjYnUDAEq1pa8aHyrfig23t9ba5tULJFR/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, planned })
